@@ -7,6 +7,7 @@ export function requestNordigen<T>(
   options?: RequestInit,
 ): Promise<T> {
   const headers = new Headers();
+
   headers.append('Accept', 'application/json');
   headers.append('Content-Type', 'application/json');
 
@@ -125,7 +126,7 @@ export function requestAuthenticatedNordigen<T>(
 
   // Normal request with the token
   return requestNordigen<T>(resource, body, {
-    headers: { Authorization: `Bearer ${savedToken?.access}` },
+    headers: { Authorization: `Bearer ${savedToken.access}` },
     ...options,
   }).catch((error) => {
     console.error(error);
