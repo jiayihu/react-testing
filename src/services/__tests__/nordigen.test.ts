@@ -3,17 +3,20 @@ import { requestNordigen } from '../nordigen';
 describe('requestNordigen', () => {
   const originalFetch = window.fetch;
 
+  // describe => fetchMock.mockImplementation(impl)
+  // beforeEach => resetAllMocks
+
   // beforeAll + afterAll
   // beforeEach + afterEach
 
+  const fetchMock = jest.fn(function fetchImpl() {
+    const responseJsonMock = jest.fn(() => Promise.resolve({ status_code: 200 }));
+    const response = { json: responseJsonMock } as unknown as Response;
+
+    return Promise.resolve(response);
+  });
+
   beforeEach(() => {
-    const fetchMock = jest.fn(() => {
-      const responseJsonMock = jest.fn(() => Promise.resolve({ status_code: 200 }));
-      const response = { json: responseJsonMock } as unknown as Response;
-
-      return Promise.resolve(response);
-    });
-
     Object.defineProperty(global, 'fetch', {
       value: fetchMock,
       configurable: true,
@@ -25,7 +28,9 @@ describe('requestNordigen', () => {
   });
 
   afterEach(() => {
-    // window.fetch = originalFetch;
+    // window.fetch = originalFetch
+
+    jest.clearAllMocks();
 
     Object.defineProperty(global, 'fetch', {
       value: originalFetch,
