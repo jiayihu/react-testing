@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { noop } from '../../utils';
 import {
   NewTokenResponse,
   NordigenErrorResponse,
@@ -312,8 +313,11 @@ describe('requestAuthenticatedNordigen', () => {
         return Promise.resolve({ json: responseJsonMock } as unknown as Response);
       });
 
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(noop);
+
     const response = await requestAuthenticatedNordigen('accounts');
 
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledTimes(3); // 401 response + refresh/token + accounts
 
     /** @NOTE the 2nd call is the one for the refresh token */
@@ -325,6 +329,14 @@ describe('requestAuthenticatedNordigen', () => {
     expect(JSON.parse(requestOptions.body as string)).toEqual({
       refresh: defaultSavedToken.refresh,
     });
+
+    const persistedToken: SavedToken = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '');
+    expect(persistedToken.access).toBe(refreshTokenResponse.access);
+    expect(persistedToken.refresh).toBe(defaultSavedToken.refresh);
+
+    expect(response).toEqual(defaultResponse);
+
+    consoleErrorSpy.mockRestore();
   });
 });
 
