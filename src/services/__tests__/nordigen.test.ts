@@ -1,4 +1,10 @@
-import { requestNordigen } from '../nordigen';
+import { faker } from '@faker-js/faker';
+import {
+  requestAuthenticatedNordigen,
+  requestNordigen,
+  SavedToken,
+  STORAGE_KEY,
+} from '../nordigen';
 
 describe('requestNordigen', () => {
   const originalFetch = window.fetch;
@@ -9,8 +15,9 @@ describe('requestNordigen', () => {
   // beforeAll + afterAll
   // beforeEach + afterEach
 
+  const responseJsonMock = jest.fn(() => Promise.resolve({ status_code: 200 }));
+
   const fetchMock = jest.fn(function fetchImpl() {
-    const responseJsonMock = jest.fn(() => Promise.resolve({ status_code: 200 }));
     const response = { json: responseJsonMock } as unknown as Response;
 
     return Promise.resolve(response);
@@ -103,6 +110,125 @@ describe('requestNordigen', () => {
       headers: { map: { accept: 'application/json', 'content-type': 'application/json' } },
       method: 'GET',
     });
+  });
+
+  it('should allow to specify additional Headers', async () => {
+    const token = 'Bearer token';
+
+    await requestNordigen('accounts', undefined, {
+      headers: { Authorization: token },
+    });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    const options = (fetch as jest.Mock).mock.calls[0][1] as RequestInit;
+    const headers = options.headers;
+
+    expect(headers).toEqual({
+      map: {
+        accept: 'application/json',
+        authorization: token,
+        'content-type': 'application/json',
+      },
+    });
+  });
+
+  it('should return the response if okay', async () => {
+    const response = await requestNordigen('accounts');
+
+    expect(response).toEqual({ status_code: 200 });
+  });
+
+  it('should reject the response if not okay', async () => {
+    const mockedResponse = { status_code: 400 };
+    responseJsonMock.mockImplementationOnce(() => Promise.resolve(mockedResponse));
+
+    /**
+     * const effect = async () => {
+      const response = await requestNordigen('accounts');
+    }
+     * expect(effect).toThrow():
+
+     * try {
+     *   effect()
+     * } catch (e) {
+     *   if (!(e instanceof Error)) {
+     *     throw new Error("")
+     *   }
+     * }
+     * 
+     * expect(effect).rejects
+     * 
+     * promise.catch()
+     * 
+     * ...
+     */
+
+    return expect(requestNordigen('accounts')).rejects.toEqual(mockedResponse);
+  });
+
+  it('should throw', () => {
+    expect(() => {
+      throw new Error();
+    }).toThrow(Error);
+  });
+});
+
+describe('requestAuthenticatedNordigen', () => {
+  const originalFetch = window.fetch;
+
+  const defaultResponse = { status_code: 200 };
+  const responseJsonMock = jest.fn(() => Promise.resolve(defaultResponse));
+
+  const fetchMock = jest.fn(function fetchImpl() {
+    const response = { json: responseJsonMock } as unknown as Response;
+
+    return Promise.resolve(response);
+  });
+
+  const defaultSavedToken: SavedToken = {
+    access: 'accessToken',
+    access_expires: faker.date.soon().toISOString(),
+    refresh: 'refreshToken',
+    refresh_expires: faker.date.soon().toISOString(),
+  };
+
+  beforeEach(() => {
+    Object.defineProperty(global, 'fetch', {
+      value: fetchMock,
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
+
+    // window.fetch = jest.fn();
+  });
+
+  afterEach(() => {
+    // window.fetch = originalFetch
+
+    jest.clearAllMocks();
+
+    Object.defineProperty(global, 'fetch', {
+      value: originalFetch,
+      enumerable: true,
+      configurable: true,
+    });
+  });
+
+  it('Should return an authenticated request to the API using the saved token', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSavedToken));
+
+    const response = await requestAuthenticatedNordigen('accounts');
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    const options = (fetch as jest.Mock).mock.calls[0][1] as RequestInit;
+    const headers = options.headers as Headers;
+
+    expect(headers.get('Authorization')).toBe(`Bearer ${defaultSavedToken.access}`);
+
+    expect(response).toEqual(defaultResponse);
   });
 });
 

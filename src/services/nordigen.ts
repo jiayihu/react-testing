@@ -160,7 +160,7 @@ export function requestAuthenticatedNordigen<T>(
   });
 }
 
-export function persistToken(response: NewTokenResponse) {
+function persistToken(response: NewTokenResponse) {
   const now = new Date();
   const savedToken: SavedToken = {
     access: response.access,
@@ -171,7 +171,7 @@ export function persistToken(response: NewTokenResponse) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(savedToken));
 }
 
-export function persistRefreshedToken(savedToken: SavedToken, response: RefreshTokenResponse) {
+function persistRefreshedToken(savedToken: SavedToken, response: RefreshTokenResponse) {
   const now = new Date();
   const refreshedToken: SavedToken = {
     access: response.access,
