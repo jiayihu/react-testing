@@ -1,5 +1,8 @@
 import { faker } from '@faker-js/faker';
 import {
+  NewTokenResponse,
+  NordigenErrorResponse,
+  RefreshTokenResponse,
   requestAuthenticatedNordigen,
   requestNordigen,
   SavedToken,
@@ -174,13 +177,18 @@ describe('requestNordigen', () => {
   });
 });
 
+/**
+ * Early abstractions
+ * - Devo leggere l'implementazione dell'astrazione per capire la funzione che usa l'astrazione?
+ */
+
 describe('requestAuthenticatedNordigen', () => {
   const originalFetch = window.fetch;
 
   const defaultResponse = { status_code: 200 };
   const responseJsonMock = jest.fn(() => Promise.resolve(defaultResponse));
 
-  const fetchMock = jest.fn(function fetchImpl() {
+  const fetchMock = jest.fn(function fetchImpl(_resource: string) {
     const response = { json: responseJsonMock } as unknown as Response;
 
     return Promise.resolve(response);
@@ -208,6 +216,7 @@ describe('requestAuthenticatedNordigen', () => {
     // window.fetch = originalFetch
 
     jest.clearAllMocks();
+    localStorage.clear();
 
     Object.defineProperty(global, 'fetch', {
       value: originalFetch,
@@ -229,6 +238,93 @@ describe('requestAuthenticatedNordigen', () => {
     expect(headers.get('Authorization')).toBe(`Bearer ${defaultSavedToken.access}`);
 
     expect(response).toEqual(defaultResponse);
+  });
+
+  it('Should request a token if not available', async () => {
+    const responseToken: NewTokenResponse = {
+      access: 'accessToken',
+      access_expires: 86400,
+      refresh: 'refreshToken',
+      refresh_expires: 2592000,
+    };
+
+    fetchMock.mockImplementationOnce((resource: string) => {
+      if (resource.match(/token\/new/)) {
+        const response = {
+          json: jest.fn(() => Promise.resolve(responseToken)),
+        } as unknown as Response;
+
+        return Promise.resolve(response);
+      }
+
+      return Promise.resolve({ json: responseJsonMock } as unknown as Response);
+    });
+
+    const response = await requestAuthenticatedNordigen('accounts');
+
+    const tokenCall = (fetch as jest.Mock).mock.calls[0];
+    const endpoint = tokenCall[0] as string;
+    const requestOptions = tokenCall[1] as RequestInit;
+
+    expect(endpoint).toMatch(/token\/new/);
+    expect(JSON.parse(requestOptions.body as string)).toEqual({
+      secret_id: expect.any(String),
+      secret_key: expect.any(String),
+    });
+
+    const persistedToken: SavedToken = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '');
+    expect(persistedToken.access).toBe(responseToken.access);
+    expect(persistedToken.refresh).toBe(responseToken.refresh);
+
+    expect(response).toEqual(defaultResponse);
+  });
+
+  it('Should refresh the token if the server returns 401 Invalid token but the refresh token is still valid', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSavedToken));
+
+    const invalidTokenResponse: NordigenErrorResponse = {
+      summary: 'Invalid token',
+      detail: 'Token is invalid or expired',
+      status_code: 401,
+    };
+
+    const refreshTokenResponse: RefreshTokenResponse = {
+      access: 'refreshedAccessToken',
+      access_expires: 86400,
+    };
+
+    fetchMock
+      .mockImplementationOnce(() => {
+        const response = {
+          json: jest.fn(() => Promise.resolve(invalidTokenResponse)),
+        } as unknown as Response;
+        return Promise.resolve(response);
+      })
+      .mockImplementationOnce((resource: string) => {
+        if (resource.match(/token\/refresh/)) {
+          const response = {
+            json: jest.fn(() => Promise.resolve(refreshTokenResponse)),
+          } as unknown as Response;
+
+          return Promise.resolve(response);
+        }
+
+        return Promise.resolve({ json: responseJsonMock } as unknown as Response);
+      });
+
+    const response = await requestAuthenticatedNordigen('accounts');
+
+    expect(fetch).toHaveBeenCalledTimes(3); // 401 response + refresh/token + accounts
+
+    /** @NOTE the 2nd call is the one for the refresh token */
+    const refreshCall = (fetch as jest.Mock).mock.calls[1];
+    const endpoint = refreshCall[0] as string;
+    const requestOptions = refreshCall[1] as RequestInit;
+
+    expect(endpoint).toMatch(/token\/refresh/);
+    expect(JSON.parse(requestOptions.body as string)).toEqual({
+      refresh: defaultSavedToken.refresh,
+    });
   });
 });
 
