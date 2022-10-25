@@ -1,27 +1,33 @@
 import { faker } from '@faker-js/faker';
-import { rest } from 'msw';
+import { MockedRequest, rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { noop } from '../../utils';
+import { noop, wait } from '../../utils';
 import { invalidTokenResponse, nordigenTokenHandlers } from '../mocks/nordigen.handler';
 import { requestAuthenticatedNordigen, SavedToken, STORAGE_KEY } from '../nordigen';
 
 describe('requestAuthenticatedNordigen', () => {
   const defaultResponse = { status_code: 200 };
-  const server = setupServer(...nordigenTokenHandlers);
+  const server = setupServer(
+    ...[
+      ...nordigenTokenHandlers,
+      rest.get('/nordigen/api/v2/accounts', (req, res, ctx) => {
+        const Authorization = req.headers.get('Authorization');
 
-  server.use(
-    rest.get('/nordigen/api/v2/accounts', (req, res, ctx) => {
-      const Authorization = req.headers.get('Authorization');
+        if (!Authorization) {
+          return res(ctx.status(401), ctx.json(invalidTokenResponse));
+        }
 
-      if (!Authorization) {
-        return res(ctx.status(401), ctx.json(invalidTokenResponse));
-      }
-
-      return res(ctx.status(200), ctx.json(defaultResponse));
-    }),
+        return res(ctx.status(200), ctx.json(defaultResponse));
+      }),
+    ],
   );
 
   beforeAll(() => server.listen());
+
+  afterEach(() => {
+    server.resetHandlers();
+    localStorage.clear();
+  });
 
   afterAll(() => server.close());
 
@@ -44,7 +50,9 @@ describe('requestAuthenticatedNordigen', () => {
     refresh_expires: faker.date.soon().toISOString(),
   };
 
-  it('Should refresh the token if the server returns 401 Invalid token but the refresh token is still valid', async () => {
+  it('Should refresh the token if the server returns 401 Invalid token but the refresh token is still valid', (done) => {
+    let doneAssertions = { response: false, callback: false };
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSavedToken));
 
     server.use(
@@ -59,18 +67,38 @@ describe('requestAuthenticatedNordigen', () => {
       }),
     );
 
+    const requestHandler = async (req: MockedRequest) => {
+      if (req.method === 'GET') {
+        return;
+      }
+
+      const body: { refresh: string } = await req.json();
+
+      await wait(100);
+
+      expect(body.refresh).toBe(defaultSavedToken.refresh);
+
+      doneAssertions.callback = true;
+      doneAssertions.response && doneAssertions.callback && done();
+    };
+
+    server.events.on('request:start', requestHandler);
+
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(noop);
 
-    const response = await requestAuthenticatedNordigen('accounts');
+    requestAuthenticatedNordigen('accounts').then((response) => {
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
 
-    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+      const persistedToken: SavedToken = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '');
+      expect(persistedToken.access).not.toBe(defaultSavedToken.access);
+      expect(persistedToken.refresh).toBe(defaultSavedToken.refresh);
 
-    const persistedToken: SavedToken = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '');
-    expect(persistedToken.access).not.toBe(defaultSavedToken.access);
-    expect(persistedToken.refresh).toBe(defaultSavedToken.refresh);
+      expect(response).toEqual(defaultResponse);
 
-    expect(response).toEqual(defaultResponse);
+      consoleErrorSpy.mockRestore();
 
-    consoleErrorSpy.mockRestore();
+      doneAssertions.response = true;
+      doneAssertions.response && doneAssertions.callback && done();
+    });
   });
 });
