@@ -19,9 +19,9 @@ import { useSignedInUser } from '../auth/AuthContext';
 import { categories, CategoryName } from '../category/category.types';
 import { Currency } from '../misc/currency/Currency';
 import { SubmitButton } from '../ui/SubmitButton';
+import { updateAccountTransaction } from './services/transactions.firebase';
 import { requestAccountTransactions } from './store/transactions.actions';
 import { IdentityName, Transaction, TransactionKind } from './transaction.types';
-import { updateAccountTransaction } from './transactions.service';
 
 type Props = {
   transaction: Transaction;

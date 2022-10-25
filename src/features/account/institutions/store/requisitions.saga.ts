@@ -1,8 +1,10 @@
 import { all, call, delay, put, takeLatest } from 'redux-saga/effects';
 import { BankAccount } from '../../account.types';
-import { addSavedAccount, getInstitutionAccount, getSavedAccounts } from '../../accounts.service';
+import { addSavedAccount, getSavedAccounts } from '../../services/accounts.firebase';
+import { getInstitutionAccount } from '../../services/accounts.nordigen';
 import { Requisition, UserRequisition } from '../institution.types';
-import { getRequisition, getUserRequisitions } from '../institutions.service';
+import { getRequisition } from '../services/institutions.nordigen';
+import { getUserRequisitions } from '../services/requisitions.firebase';
 import {
   RequisitionActionType,
   SaveRequisitionAccountsAction,

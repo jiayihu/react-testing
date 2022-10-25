@@ -1,6 +1,6 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { Account } from './account.types';
-import { getSavedAccounts } from './accounts.service';
+import { getSavedAccounts } from './services/accounts.firebase';
 
 export const accountsQueryKey = 'accounts';
 

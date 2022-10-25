@@ -1,13 +1,10 @@
 import { formatISO } from 'date-fns';
 import { all, call, put, takeEvery } from 'redux-saga/effects';
 import { BankAccount } from '../../account/account.types';
-import { getSavedAccount, updateSavedAccount } from '../../account/accounts.service';
+import { getSavedAccount, updateSavedAccount } from '../../account/services/accounts.firebase';
+import { addAccountTransactions, getAccountTransactions } from '../services/transactions.firebase';
+import { getInstitutionAccountTransactions } from '../services/transactions.nordigen';
 import { Transaction } from '../transaction.types';
-import {
-  addAccountTransactions,
-  getAccountTransactions,
-  getInstitutionAccountTransactions,
-} from '../transactions.service';
 import {
   RequestAccountTransactionsAction,
   requestAccountTransactionsError,

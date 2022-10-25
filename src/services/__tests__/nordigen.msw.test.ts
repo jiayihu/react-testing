@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { MockedRequest, rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { noop, wait } from '../../utils';
-import { invalidTokenResponse, nordigenTokenHandlers } from '../mocks/nordigen.handler';
+import { invalidTokenResponse, nordigenTokenHandlers } from '../mocks/nordigen.handlers';
 import { requestAuthenticatedNordigen, SavedToken, STORAGE_KEY } from '../nordigen';
 
 describe('requestAuthenticatedNordigen', () => {

@@ -7,10 +7,10 @@ import {
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
-import { doc, DocumentReference, getDoc, setDoc } from 'firebase/firestore';
-import { app } from '../../services/firebase';
-import { db } from '../../services/firestore';
-import { AuthUser, UserInfo } from './auth.types';
+import { doc, setDoc } from 'firebase/firestore';
+import { app } from '../../../services/firebase';
+import { db } from '../../../services/firestore';
+import { AuthUser, UserInfo } from '../auth.types';
 
 export const auth = getAuth(app);
 
@@ -57,11 +57,4 @@ function saveUserInfo(user: AuthUser) {
   };
 
   return setDoc(docRef, userInfo);
-}
-
-export async function getUserInfo(uid: string): Promise<UserInfo | undefined> {
-  const docRef = doc(db, 'users', uid) as DocumentReference<UserInfo>;
-  const docSnap = await getDoc<UserInfo>(docRef);
-
-  return docSnap.data();
 }

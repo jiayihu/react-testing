@@ -8,7 +8,12 @@ import { FormField } from '../ui/FormField';
 import { InputField } from '../ui/forms/InputField';
 import { Icons } from '../ui/Icons';
 import { SubmitButton } from '../ui/SubmitButton';
-import { createUser, signInUser, signInWithGithub, signInWithGoogle } from './auth.service';
+import {
+  createUser,
+  signInUser,
+  signInWithGithub,
+  signInWithGoogle,
+} from './services/auth.firebase';
 
 type FormValues = {
   email: string;

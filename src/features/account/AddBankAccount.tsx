@@ -5,11 +5,8 @@ import { Box, Button, Container, Heading, Select } from 'theme-ui';
 import { useSignedInUser } from '../auth/AuthContext';
 import { Spinner } from '../ui/Spinner/Spinner';
 import { Institution } from './institutions/institution.types';
-import {
-  addUserRequisition,
-  getInstitutions,
-  postRequisition,
-} from './institutions/institutions.service';
+import { getInstitutions, postRequisition } from './institutions/services/institutions.nordigen';
+import { addUserRequisition } from './institutions/services/requisitions.firebase';
 
 const countries: Array<{ value: string; label: string }> = [
   { value: 'nl', label: 'Dutch' },

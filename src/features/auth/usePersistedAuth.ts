@@ -1,8 +1,8 @@
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect } from 'react';
 import { Location, useLocation, useNavigate } from 'react-router-dom';
-import { auth } from './auth.service';
 import { useAuth } from './AuthContext';
+import { auth } from './services/auth.firebase';
 
 export function usePersistedAuth() {
   const { signIn, signOut } = useAuth();

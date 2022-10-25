@@ -4,9 +4,9 @@ import { Currency } from '../../misc/currency/Currency';
 import { Icons } from '../../ui/Icons';
 import { Spinner } from '../../ui/Spinner/Spinner';
 import { BankAccount } from '../account.types';
-import { getAccountBalances } from '../accounts.service';
+import { getAccountBalances } from '../services/accounts.nordigen';
 import background from './background.png';
-import { getInstitution } from './institutions.service';
+import { getInstitution } from './services/institutions.nordigen';
 
 type Props = {
   account: BankAccount;

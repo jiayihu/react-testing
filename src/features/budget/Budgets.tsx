@@ -15,7 +15,7 @@ import { Budget } from './budget.types';
 import { BudgetDetails } from './BudgetDetails';
 import { BudgetForm, FormValues } from './BudgetForm';
 import { BudgetInfo } from './BudgetInfo';
-import { addBudget, deleteBudget, updateBudget } from './budgets.service';
+import { addBudget, deleteBudget, updateBudget } from './services/budgets.firebase';
 import { budgetsQueryKey, useBudgets } from './useBudgets';
 
 export function Budgets() {

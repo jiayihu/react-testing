@@ -8,8 +8,8 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { db } from '../../services/firestore';
-import { Budget } from './budget.types';
+import { db } from '../../../services/firestore';
+import { Budget } from '../budget.types';
 
 export async function getBudgets(uid: string): Promise<Budget[]> {
   const collectionRef = collection(db, 'users', uid, 'budgets') as CollectionReference<Budget>;

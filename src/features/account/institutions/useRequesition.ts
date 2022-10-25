@@ -1,8 +1,10 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { BankAccount } from '../account.types';
-import { addSavedAccount, getInstitutionAccount, getSavedAccounts } from '../accounts.service';
-import { getRequisition, getUserRequisitions } from './institutions.service';
+import { addSavedAccount, getSavedAccounts } from '../services/accounts.firebase';
+import { getInstitutionAccount } from '../services/accounts.nordigen';
+import { getRequisition } from './services/institutions.nordigen';
+import { getUserRequisitions } from './services/requisitions.firebase';
 
 export const saveRequisitionAccounts = async (uid: string) => {
   const userRequisitions = await getUserRequisitions(uid);

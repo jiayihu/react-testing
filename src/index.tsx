@@ -1,5 +1,6 @@
 import { Global } from '@emotion/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SetupWorkerApi } from 'msw';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
@@ -12,6 +13,20 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import theme from './theme';
 
+if (process.env.NODE_ENV === 'development') {
+  const worker = require('./mocks/browser').worker as SetupWorkerApi;
+  worker.start({
+    quiet: false,
+    onUnhandledRequest(req, print) {
+      if (!req.url.toString().match(/nordigen/)) {
+        return;
+      }
+
+      print.warning();
+    },
+  });
+}
+
 const queryClient = new QueryClient();
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
@@ -19,7 +34,7 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Provider store={store}>
-        <AuthProvider>
+        <AuthProvider initialState={{ kind: 'UNINITIALIZED' }}>
           <ThemeProvider theme={theme}>
             <QueryClientProvider client={queryClient}>
               <Global

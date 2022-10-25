@@ -69,5 +69,8 @@
     "@types/uuid": "^8.3.4",
     "http-proxy-middleware": "^2.0.6",
     "msw": "^0.47.4"
+  },
+  "msw": {
+    "workerDirectory": "public"
   }
 }

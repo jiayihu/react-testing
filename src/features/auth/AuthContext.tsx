@@ -2,19 +2,19 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 import { noop } from '../../utils';
 import { AuthUser } from './auth.types';
 
-type UninitializedAuth = {
+export type UninitializedAuth = {
   kind: 'UNINITIALIZED';
 };
-type SignedIn = {
+export type SignedIn = {
   kind: 'SIGNED_IN';
   user: AuthUser;
 };
-type SignedOut = {
+export type SignedOut = {
   kind: 'SIGNED_OUT';
   user: null;
 };
 
-type AuthState = UninitializedAuth | SignedIn | SignedOut;
+export type AuthState = UninitializedAuth | SignedIn | SignedOut;
 
 export const isSignedIn = (authState: AuthState): authState is SignedIn => {
   return authState.kind === 'SIGNED_IN';
@@ -36,8 +36,12 @@ const AuthContext = createContext<AuthContextValue>({
   signOut: noop,
 });
 
-export function AuthProvider(props: PropsWithRequiredChildren<unknown>) {
-  const [authState, setAuthState] = useState<AuthState>({ kind: 'UNINITIALIZED' });
+type Props = {
+  initialState: AuthState;
+};
+
+export function AuthProvider(props: PropsWithRequiredChildren<Props>) {
+  const [authState, setAuthState] = useState<AuthState>(props.initialState);
 
   const signIn = useCallback((user: AuthUser) => {
     setAuthState({ kind: 'SIGNED_IN', user });
