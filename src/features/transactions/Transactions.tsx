@@ -98,6 +98,7 @@ export function Transactions() {
                       setSelectedTransactionId(transaction.transactionId);
                       props.onClick && props.onClick(e);
                     }}
+                    aria-label={`Transaction ${transaction.information.description}`}
                   >
                     <TransactionInfo transaction={transaction} />
                   </Clickable>
