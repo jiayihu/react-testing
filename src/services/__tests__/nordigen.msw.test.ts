@@ -67,6 +67,15 @@ describe('requestAuthenticatedNordigen', () => {
       }),
     );
 
+    // process.nextTick(callback)
+    // setImmediate(callback)
+
+    /**
+     * Promise.resolve().then(() => console.log("A"))
+     *
+     * console.log("B");
+     */
+
     const requestHandler = async (req: MockedRequest) => {
       if (req.method === 'GET') {
         return;

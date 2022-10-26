@@ -63,7 +63,13 @@ export function AuthProvider(props: PropsWithRequiredChildren<Props>) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const value = useContext(AuthContext);
+
+  if (value.signIn === noop) {
+    throw new Error('useAuth can be used only inside the <AuthProvider />');
+  }
+
+  return value;
 }
 
 export function useSignedInUser() {

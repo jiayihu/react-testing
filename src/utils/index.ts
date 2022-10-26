@@ -32,5 +32,7 @@ export const relativeDateLocale = {
 
 export const wait = (time: number) =>
   new Promise((resolve) => {
-    setTimeout(() => resolve(undefined), time);
+    setTimeout(() => {
+      resolve(undefined);
+    }, time);
   });
