@@ -73,6 +73,7 @@ export function BudgetForm({ budget, onSave }: Props) {
           <Label htmlFor={nameId}>Name</Label>
           <InputField
             name="name"
+            id={nameId}
             control={control}
             rules={{ required: 'This field is required' }}
           />

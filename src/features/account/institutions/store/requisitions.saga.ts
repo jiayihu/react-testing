@@ -1,4 +1,5 @@
 import { all, call, delay, put, takeLatest } from 'redux-saga/effects';
+import { normalizeError } from '../../../../utils';
 import { BankAccount } from '../../account.types';
 import { addSavedAccount, getSavedAccounts } from '../../services/accounts.firebase';
 import { getInstitutionAccount } from '../../services/accounts.nordigen';
@@ -14,7 +15,7 @@ import {
 
 export function* saveRequisitionAccountsSaga(action: SaveRequisitionAccountsAction) {
   const uid = action.payload.uid;
-  const attempts = 5;
+  const attempts = 3;
 
   for (let i = 0; i < attempts; i += 1) {
     try {
@@ -43,13 +44,12 @@ export function* saveRequisitionAccountsSaga(action: SaveRequisitionAccountsActi
 
       return;
     } catch (e) {
-      console.log('Attempt #', i, 'failed');
       const isLastAttempt = i < attempts - 1;
 
       if (isLastAttempt) {
         yield delay(1000);
       } else {
-        yield put(saveRequisitionAccountsError(e instanceof Error ? e : new Error(`${e}`)));
+        yield put(saveRequisitionAccountsError(normalizeError(e)));
       }
     }
   }

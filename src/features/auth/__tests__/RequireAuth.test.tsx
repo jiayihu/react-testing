@@ -4,6 +4,12 @@ import { AuthProvider, AuthState } from '../AuthContext';
 import { RequireAuth } from '../RequireAuth';
 import { createUser } from '../services/mocks/auth.fixtures';
 
+function LocationDisplay() {
+  const location = useLocation();
+
+  return <div data-testid="location-display">{location.pathname}</div>;
+}
+
 function App(props: PropsWithRequiredChildren<unknown>) {
   const location = useLocation();
 
@@ -15,13 +21,7 @@ function App(props: PropsWithRequiredChildren<unknown>) {
   );
 }
 
-function LocationDisplay() {
-  const location = useLocation();
-
-  return <div>{location.pathname}</div>;
-}
-
-function renderWithAuthState(initialAuthState: AuthState) {
+function renderWithWrapper(initialAuthState: AuthState) {
   function Wrapper(props: PropsWithRequiredChildren<unknown>) {
     return (
       <BrowserRouter>
@@ -32,49 +32,28 @@ function renderWithAuthState(initialAuthState: AuthState) {
     );
   }
 
-  render(<RequireAuth>Protected content</RequireAuth>, { wrapper: Wrapper });
+  render(<RequireAuth>Protected content</RequireAuth>, {
+    wrapper: Wrapper,
+  });
 }
 
 describe('RequireAuth', () => {
   it('Should render the children if signed in', () => {
-    renderWithAuthState({ kind: 'SIGNED_IN', user: createUser() });
+    renderWithWrapper({ kind: 'SIGNED_IN', user: createUser() });
 
     expect(screen.getByText(/protected content/i)).toBeInTheDocument();
   });
 
   it('Should be loading while assessing if the user is signed in', () => {
-    renderWithAuthState({ kind: 'UNINITIALIZED' });
+    renderWithWrapper({ kind: 'UNINITIALIZED' });
 
+    expect(screen.getByRole('heading', { name: /skei/i })).toBeInTheDocument();
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 
   it('Should redirect to /authenticate if not signed in', () => {
-    renderWithAuthState({ kind: 'SIGNED_OUT', user: null });
+    renderWithWrapper({ kind: 'SIGNED_OUT', user: null });
 
     expect(screen.getByText(/authenticate/i)).toBeInTheDocument();
   });
 });
-
-// function Wrapper(props: PropsWithRequiredChildren<Props>) {
-//   return (
-//     <BrowserRouter>
-//       <AuthProvider initialState={props.initialAuthState}>
-//         <App>{props.children}</App>
-//       </AuthProvider>
-//     </BrowserRouter>
-//   );
-// }
-
-// function SignedInWrapper(props: PropsWithRequiredChildren<unknown>) {
-//   return (
-//     <Wrapper initialAuthState={{ kind: 'SIGNED_IN', user: createUser() }}>{props.children}</Wrapper>
-//   );
-// }
-
-// function UninitializedWrapper(props: PropsWithRequiredChildren<unknown>) {
-//   return <Wrapper initialAuthState={{ kind: 'UNINITIALIZED' }}>{props.children}</Wrapper>;
-// }
-
-// function SignedOutWrapper(props: PropsWithRequiredChildren<unknown>) {
-//   return <Wrapper initialAuthState={{ kind: 'SIGNED_OUT', user: null }}>{props.children}</Wrapper>;
-// }

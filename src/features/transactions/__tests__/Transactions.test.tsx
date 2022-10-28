@@ -12,10 +12,11 @@ jest.mock('@nivo/calendar', () => {
   };
 });
 
-describe('Transactions page', () => {
+describe('Transactions', () => {
   beforeAll(() => server.listen());
 
   afterEach(() => {
+    jest.clearAllMocks();
     server.resetHandlers();
   });
 
@@ -24,12 +25,10 @@ describe('Transactions page', () => {
   it('Should render the list of user transactions', async () => {
     render(<Transactions />, { wrapper: SignedInApplicationProviders });
 
-    await waitFor(
-      () => {
-        expect(screen.queryAllByRole('button', { name: /transaction/i }).length).toBeGreaterThan(0);
-      },
-      { timeout: 5000 },
-    );
+    // await screen.findAllByLabelText(/transaction/i);
+    await waitFor(() => {
+      expect(screen.queryAllByRole('button', { name: /transaction/i }).length).toBeGreaterThan(0);
+    });
   });
 
   it('Should open the transaction details when clicking on a transaction', async () => {

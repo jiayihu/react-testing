@@ -11,7 +11,9 @@ export const transactionHandlers = [
     const response: GetTransactionsResponse = {
       transactions: {
         booked:
-          dateFrom && isToday(new Date(dateFrom)) ? [] : range(0, 5).map(() => createTransaction()),
+          dateFrom && isToday(new Date(dateFrom))
+            ? []
+            : range(0, 10).map(() => createTransaction()),
         pending: [],
       },
     };

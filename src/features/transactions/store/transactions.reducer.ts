@@ -36,7 +36,7 @@ const getInitialState = (): TransactionsState => {
   return {
     isLoading: false,
     data: {},
-    isSuccess: false,
+    isSuccess: true,
     error: null,
   };
 };

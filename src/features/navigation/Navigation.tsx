@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { VisuallyHidden } from 'reakit/VisuallyHidden';
 import { Flex, IconButton, ThemeUICSSObject } from 'theme-ui';
 import { Icons } from '../ui/Icons';
 
@@ -17,6 +18,7 @@ export function Navigation({ sx }: NavigationProps) {
       <NavLink to="/" end style={linkStyle}>
         {({ isActive }) => (
           <IconButton sx={isActive ? { ...activeIconStyle, ...iconStyle } : iconStyle}>
+            <VisuallyHidden>Homepage</VisuallyHidden>
             <Icons name="grid" />
           </IconButton>
         )}
@@ -24,20 +26,15 @@ export function Navigation({ sx }: NavigationProps) {
       <NavLink to="/budgets" style={linkStyle}>
         {({ isActive }) => (
           <IconButton sx={isActive ? { ...activeIconStyle, ...iconStyle } : iconStyle}>
+            <VisuallyHidden>Budgets</VisuallyHidden>
             <Icons name="wallet-fill" />
           </IconButton>
         )}
       </NavLink>
-      {/* <NavLink to="/calendar" style={linkStyle}>
-        {({ isActive }) => (
-          <IconButton sx={isActive ? { ...activeIconStyle, ...iconStyle } : iconStyle}>
-            <Icons name="calendar-date" />
-          </IconButton>
-        )}
-      </NavLink> */}
       <NavLink to="/accounts" style={linkStyle}>
         {({ isActive }) => (
           <IconButton sx={isActive ? { ...activeIconStyle, ...iconStyle } : iconStyle}>
+            <VisuallyHidden>Accounts</VisuallyHidden>
             <Icons name="credit-card" />
           </IconButton>
         )}
@@ -45,6 +42,7 @@ export function Navigation({ sx }: NavigationProps) {
       <NavLink to="/settings" style={linkStyle}>
         {({ isActive }) => (
           <IconButton sx={isActive ? { ...activeIconStyle, ...iconStyle } : iconStyle}>
+            <VisuallyHidden>Settings</VisuallyHidden>
             <Icons name="gear-wide" />
           </IconButton>
         )}

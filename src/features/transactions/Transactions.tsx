@@ -9,6 +9,7 @@ import { Clickable } from '../ui/abstract/Clickable';
 import { DialogDisclosure } from '../ui/Dialog/DialogDisclosure';
 import { useDialogState } from '../ui/Dialog/useDialogState';
 import { Modal } from '../ui/Modal';
+import { Spinner } from '../ui/Spinner/Spinner';
 import { Transaction } from './transaction.types';
 import { TransactionDetails } from './TransactionForm';
 import { TransactionGroup } from './TransactionGroup';
@@ -18,7 +19,7 @@ import { useTransactions } from './useTransactions';
 export function Transactions() {
   const user = useSignedInUser();
   const { data: accounts = [] } = useAccounts(user.uid);
-  const { transactionsByAccount, transactions } = useTransactions(user.uid, accounts);
+  const { isLoading, transactionsByAccount, transactions } = useTransactions(user.uid, accounts);
 
   const dialog = useDialogState({ animated: true });
   const [selectedTransactionId, setSelectedTransactionId] = useState<
@@ -84,31 +85,35 @@ export function Transactions() {
         />
       </Box>
 
-      <Grid>
-        {Object.entries(transactionsByDate).map(([date, transactions]) => (
-          <TransactionGroup
-            date={date}
-            transactions={transactions}
-            renderTransaction={(transaction) => (
-              <DialogDisclosure {...dialog} key={transaction.transactionId}>
-                {(props) => (
-                  <Clickable
-                    {...props}
-                    onClick={(e: MouseEvent<HTMLDivElement>) => {
-                      setSelectedTransactionId(transaction.transactionId);
-                      props.onClick && props.onClick(e);
-                    }}
-                    aria-label={`Transaction ${transaction.information.description}`}
-                  >
-                    <TransactionInfo transaction={transaction} />
-                  </Clickable>
-                )}
-              </DialogDisclosure>
-            )}
-            key={date}
-          />
-        ))}
-      </Grid>
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <Grid>
+          {Object.entries(transactionsByDate).map(([date, transactions]) => (
+            <TransactionGroup
+              date={date}
+              transactions={transactions}
+              renderTransaction={(transaction) => (
+                <DialogDisclosure {...dialog} key={transaction.transactionId}>
+                  {(props) => (
+                    <Clickable
+                      {...props}
+                      onClick={(e: MouseEvent<HTMLDivElement>) => {
+                        setSelectedTransactionId(transaction.transactionId);
+                        props.onClick && props.onClick(e);
+                      }}
+                      aria-label={`Transaction ${transaction.information.description}`}
+                    >
+                      <TransactionInfo transaction={transaction} />
+                    </Clickable>
+                  )}
+                </DialogDisclosure>
+              )}
+              key={date}
+            />
+          ))}
+        </Grid>
+      )}
 
       <Modal level="base" aria-label="Transaction details" {...dialog}>
         {selectedTransaction ? (

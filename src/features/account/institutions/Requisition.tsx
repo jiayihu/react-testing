@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Alert, Box } from 'theme-ui';
+import { Alert, Box, Text } from 'theme-ui';
 import { useSignedInUser } from '../../auth/AuthContext';
 import { Spinner } from '../../ui/Spinner/Spinner';
 import { accountsQueryKey } from '../useAccounts';
@@ -13,6 +13,8 @@ export function Requisition() {
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
   const { isLoading, isSuccess, error } = useSelector(selectIsSavingAccountsState);
+
+  const alertDescriptionId = useId();
 
   useEffect(() => {
     dispatch(saveRequisitionAccounts(user.uid));
@@ -28,11 +30,15 @@ export function Requisition() {
         <Spinner />
       ) : isSuccess ? (
         <Box>
-          <Alert role="alert">Accounts successfully connected</Alert>
+          <Alert role="alert" aria-describedby={alertDescriptionId}>
+            <Text id={alertDescriptionId}>Accounts successfully connected</Text>
+          </Alert>
         </Box>
       ) : error ? (
         <Box>
-          <Alert role="alert" variant="error">{`${error}`}</Alert>
+          <Alert role="alert" variant="error" aria-describedby={alertDescriptionId}>
+            <Text id={alertDescriptionId}>{error.message}</Text>
+          </Alert>
         </Box>
       ) : null}
     </Box>

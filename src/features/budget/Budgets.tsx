@@ -115,6 +115,7 @@ export function Budgets() {
                       setSelectedBudgetId(budget.id);
                       props.onClick && props.onClick(e);
                     }}
+                    aria-label={`Budget ${budget.name}`}
                   >
                     <BudgetInfo
                       budget={budget}

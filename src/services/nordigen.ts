@@ -7,7 +7,6 @@ export function requestNordigen<T>(
   options?: RequestInit,
 ): Promise<T> {
   const headers = new Headers();
-
   headers.append('Accept', 'application/json');
   headers.append('Content-Type', 'application/json');
 
@@ -89,7 +88,7 @@ export type NordigenErrorResponse = {
   status_code: number;
 };
 
-const isNordigenError = (error: unknown): error is NordigenErrorResponse => {
+export const isNordigenError = (error: unknown): error is NordigenErrorResponse => {
   return isObject(error) && 'status_code' in error;
 };
 
@@ -126,7 +125,7 @@ export function requestAuthenticatedNordigen<T>(
 
   // Normal request with the token
   return requestNordigen<T>(resource, body, {
-    headers: { Authorization: `Bearer ${savedToken.access}` },
+    headers: { Authorization: `Bearer ${savedToken?.access}` },
     ...options,
   }).catch((error) => {
     console.error(error);
@@ -160,7 +159,7 @@ export function requestAuthenticatedNordigen<T>(
   });
 }
 
-function persistToken(response: NewTokenResponse) {
+export function persistToken(response: NewTokenResponse) {
   const now = new Date();
   const savedToken: SavedToken = {
     access: response.access,
@@ -171,7 +170,7 @@ function persistToken(response: NewTokenResponse) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(savedToken));
 }
 
-function persistRefreshedToken(savedToken: SavedToken, response: RefreshTokenResponse) {
+export function persistRefreshedToken(savedToken: SavedToken, response: RefreshTokenResponse) {
   const now = new Date();
   const refreshedToken: SavedToken = {
     access: response.access,

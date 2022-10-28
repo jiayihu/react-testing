@@ -1,4 +1,5 @@
 import enGB from 'date-fns/locale/en-GB';
+import { isNordigenError } from '../services/nordigen';
 
 export const noop = () => {
   // Noop
@@ -30,9 +31,15 @@ export const relativeDateLocale = {
   formatRelative: (token: keyof typeof formatRelativeLocale) => formatRelativeLocale[token],
 };
 
+export const normalizeError = (e: unknown) => {
+  return e instanceof Error
+    ? e
+    : isNordigenError(e)
+    ? new Error(e.detail)
+    : new Error(JSON.stringify(e, null, 2));
+};
+
 export const wait = (time: number) =>
   new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(undefined);
-    }, time);
+    setTimeout(() => resolve(undefined), time);
   });

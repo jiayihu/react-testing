@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LoginPage } from '../LoginPage';
@@ -12,15 +11,11 @@ import {
 jest.mock('../services/auth.firebase');
 
 describe('LoginPage', () => {
-  it('Should display input and buttons to login and register', () => {
+  it('should display inputs and buttons to login and register', () => {
     render(<LoginPage />);
 
-    const email = screen.getByRole('textbox', { name: /email/i });
-    expect(email).toBeVisible();
-
-    const password = screen.getByLabelText(/password/i);
-    expect(password).toBeVisible();
-
+    expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /register/i })).toBeInTheDocument();
   });
@@ -29,51 +24,43 @@ describe('LoginPage', () => {
     render(<LoginPage />);
 
     expect(screen.getByRole('button', { name: /google/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /github/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /gitHub/i })).toBeInTheDocument();
   });
 
   it('should sign in the user', async () => {
     render(<LoginPage />);
 
-    const credentials = { email: faker.internet.email(), password: faker.internet.password() };
+    const email = screen.getByRole('textbox', { name: /email/i });
+    userEvent.type(email, 'example@email.com');
 
-    const emailEl = screen.getByRole('textbox', { name: /email/i });
-    userEvent.type(emailEl, credentials.email);
+    const password = screen.getByLabelText(/password/i);
+    userEvent.type(password, 'password');
 
-    const passwordEl = screen.getByLabelText(/password/i);
-    userEvent.type(passwordEl, credentials.password);
+    const submit = screen.getByRole('button', { name: /sign in/i });
 
-    const submitEl = screen.getByRole('button', { name: /sign in/i });
+    userEvent.click(submit);
 
-    userEvent.click(submitEl);
+    await waitFor(() => expect(signInUser).toHaveBeenCalledTimes(1));
 
-    await waitFor(() => {
-      expect(signInUser).toHaveBeenCalledTimes(1);
-    });
-
-    expect(signInUser).toHaveBeenCalledWith(credentials.email, credentials.password);
+    expect(signInUser).toHaveBeenCalledWith('example@email.com', 'password');
   });
 
   it('should register the user', async () => {
     render(<LoginPage />);
 
-    const credentials = { email: faker.internet.email(), password: faker.internet.password() };
+    const email = screen.getByRole('textbox', { name: /email/i });
+    userEvent.type(email, 'example@email.com');
 
-    const emailEl = screen.getByRole('textbox', { name: /email/i });
-    userEvent.type(emailEl, credentials.email);
+    const password = screen.getByLabelText(/password/i);
+    userEvent.type(password, 'password');
 
-    const passwordEl = screen.getByLabelText(/password/i);
-    userEvent.type(passwordEl, credentials.password);
+    const submit = screen.getByRole('button', { name: /register/i });
 
-    const submitEl = screen.getByRole('button', { name: /register/i });
+    userEvent.click(submit);
 
-    userEvent.click(submitEl);
+    await waitFor(() => expect(createUser).toHaveBeenCalledTimes(1));
 
-    await waitFor(() => {
-      expect(createUser).toHaveBeenCalledTimes(1);
-    });
-
-    expect(createUser).toHaveBeenCalledWith(credentials.email, credentials.password);
+    expect(createUser).toHaveBeenCalledWith('example@email.com', 'password');
   });
 
   it('should sign in with Google', () => {

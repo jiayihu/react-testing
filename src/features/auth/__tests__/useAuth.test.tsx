@@ -1,9 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { MutableRefObject } from 'react';
-import { BrowserRouter, Location, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import { AuthUser } from '../auth.types';
-import { AuthProvider, isSignedIn, useAuth } from '../AuthContext';
+import { AuthProvider, isSignedIn, isSignedOut, useAuth } from '../AuthContext';
 import { createUser } from '../services/mocks/auth.fixtures';
 import { usePersistedAuth } from '../usePersistedAuth';
 
@@ -14,7 +13,9 @@ jest.mock('react-router-dom', () => {
   return {
     __esModule: true,
     ...originalModule,
-    useLocation: jest.fn().mockReturnValue({}),
+    useLocation: jest.fn(() => {
+      return {};
+    }),
     useNavigate: jest.fn().mockReturnValue(jest.fn()),
   };
 });
@@ -48,80 +49,101 @@ describe('usePersistedAuth + useAuth', () => {
     await waitFor(() => expect(onAuthStateChangedRef.current).not.toBe(null));
 
     act(() => {
-      if (!onAuthStateChangedRef.current) {
-        throw new Error('Undefined callback');
-      }
-
-      onAuthStateChangedRef.current(createUser());
+      onAuthStateChangedRef.current && onAuthStateChangedRef.current(createUser());
     });
 
     expect(isSignedIn(result.current.authState)).toBe(true);
   });
 
   it('Should redirect the user to the original route on sign-in', async () => {
-    const previousRoute = '/originalRoute';
-
     const onAuthStateChangedRef = setupOnAuthStateChanged();
-    const navigate = setupRouteLocation({
-      state: { from: { pathname: previousRoute } },
-    } as Location);
 
-    const { result } = renderHook(() => useAuth(), { wrapper: Wrapper });
+    const previousRoute = '/originalRoute';
+    (useLocation as jest.Mock).mockReturnValue({ state: { from: { pathname: previousRoute } } });
+
+    const navigateSpy = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(navigateSpy);
+
+    renderHook(() => useAuth(), { wrapper: Wrapper });
 
     await waitFor(() => expect(onAuthStateChangedRef.current).not.toBe(null));
 
     act(() => {
-      if (!onAuthStateChangedRef.current) {
-        throw new Error('Undefined callback');
-      }
-
-      onAuthStateChangedRef.current(createUser());
+      onAuthStateChangedRef.current && onAuthStateChangedRef.current(createUser());
     });
 
-    expect(isSignedIn(result.current.authState)).toBe(true);
-
-    expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith(previousRoute);
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    expect(navigateSpy).toHaveBeenCalledWith(previousRoute);
   });
 
   it('Should redirect to homepage if landed on /authenticate directly', async () => {
     const onAuthStateChangedRef = setupOnAuthStateChanged();
-    const navigate = setupRouteLocation({ pathname: '/authenticate' } as Location);
+
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/authenticate' });
+
+    const navigateSpy = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(navigateSpy);
+
+    renderHook(() => useAuth(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(onAuthStateChangedRef.current).not.toBe(null));
+
+    act(() => {
+      onAuthStateChangedRef.current && onAuthStateChangedRef.current(createUser());
+    });
+
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    expect(navigateSpy).toHaveBeenCalledWith('/');
+  });
+
+  it('Should remain in the current route if landing on authenticated route', async () => {
+    const onAuthStateChangedRef = setupOnAuthStateChanged();
+
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/' });
+
+    const navigateSpy = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(navigateSpy);
+
+    renderHook(() => useAuth(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(onAuthStateChangedRef.current).not.toBe(null));
+
+    act(() => {
+      onAuthStateChangedRef.current && onAuthStateChangedRef.current(createUser());
+    });
+
+    expect(navigateSpy).not.toHaveBeenCalled();
+  });
+
+  it('Should sign out and redirect to /authenticate', async () => {
+    const onAuthStateChangedRef = setupOnAuthStateChanged();
+
+    (useLocation as jest.Mock).mockReturnValue({ pathname: '/' });
+
+    const navigateSpy = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(navigateSpy);
 
     const { result } = renderHook(() => useAuth(), { wrapper: Wrapper });
 
     await waitFor(() => expect(onAuthStateChangedRef.current).not.toBe(null));
 
     act(() => {
-      if (!onAuthStateChangedRef.current) {
-        throw new Error('Undefined callback');
-      }
-
-      onAuthStateChangedRef.current(createUser());
+      onAuthStateChangedRef.current && onAuthStateChangedRef.current(null);
     });
 
-    expect(isSignedIn(result.current.authState)).toBe(true);
+    expect(isSignedOut(result.current.authState)).toBe(true);
 
-    expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    expect(navigateSpy).toHaveBeenCalledWith('/authenticate');
   });
 });
 
 function setupOnAuthStateChanged() {
-  const ref: MutableRefObject<((user: AuthUser | null) => void) | null> = { current: null };
+  const ref: { current: ((user: AuthUser | null) => void) | null } = { current: null };
 
   (onAuthStateChanged as jest.Mock).mockImplementation((_auth, fn) => {
     ref.current = fn;
   });
 
   return ref;
-}
-
-function setupRouteLocation(initialLocation: Location) {
-  (useLocation as jest.Mock).mockReturnValue(initialLocation);
-
-  const navigateSpy = jest.fn();
-  (useNavigate as jest.Mock).mockReturnValue(navigateSpy);
-
-  return navigateSpy;
 }

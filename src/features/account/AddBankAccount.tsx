@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import groupBy from 'lodash/groupBy';
 import { ChangeEvent, useCallback, useMemo, useState } from 'react';
-import { Box, Button, Container, Heading, Select } from 'theme-ui';
+import { Box, Button, Container, Heading, Label, Select } from 'theme-ui';
 import { useSignedInUser } from '../auth/AuthContext';
 import { Spinner } from '../ui/Spinner/Spinner';
 import { Institution } from './institutions/institution.types';
@@ -49,40 +49,47 @@ export function AddBankAccount() {
 
   return (
     <Container>
-      <Select defaultValue="default" value={country} onChange={handleChange} sx={{ width: '100%' }}>
-        <option disabled value="default">
-          Select a country
-        </option>
-        {countries.map((item) => (
-          <option value={item.value} key={item.value}>
-            {item.label}
-          </option>
-        ))}
-      </Select>
+      <Label sx={{ display: 'block', flexDirection: 'column' }}>
+        Select a country
+        <Select
+          defaultValue="default"
+          value={country}
+          onChange={handleChange}
+          sx={{ width: '100%' }}
+        >
+          {countries.map((item) => (
+            <option value={item.value} key={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </Select>
+      </Label>
 
       <Box>
         {fetchStatus === 'fetching' ? (
           <Spinner />
         ) : (
-          <Box>
+          <Box as="ul" aria-label="Institutions">
             {Object.entries(institutionsByFirstLetter).map(([letter, institutions]) => {
               return (
-                <Box key={letter}>
+                <Box as="li" key={letter}>
                   <Heading as="h3" sx={{ my: [4] }}>
                     {letter}
                   </Heading>
-                  {institutions.map((institution) => (
-                    <Box key={institution.id} sx={{ mb: [1] }}>
-                      <Button
-                        type="button"
-                        variant="link"
-                        sx={{ textAlign: 'left' }}
-                        onClick={() => handleInstitutionSelect(institution)}
-                      >
-                        {institution.name}
-                      </Button>
-                    </Box>
-                  ))}
+                  <Box as="ul" aria-label={letter}>
+                    {institutions.map((institution) => (
+                      <Box as="li" key={institution.id} sx={{ mb: [1] }}>
+                        <Button
+                          type="button"
+                          variant="link"
+                          sx={{ textAlign: 'left' }}
+                          onClick={() => handleInstitutionSelect(institution)}
+                        >
+                          {institution.name}
+                        </Button>
+                      </Box>
+                    ))}
+                  </Box>
                 </Box>
               );
             })}
