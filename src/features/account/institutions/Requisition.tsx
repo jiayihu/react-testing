@@ -30,7 +30,7 @@ export function Requisition() {
         <Spinner />
       ) : isSuccess ? (
         <Box>
-          <Alert role="alert" aria-describedby={alertDescriptionId}>
+          <Alert role="alert" variant="error" aria-describedby={alertDescriptionId}>
             <Text id={alertDescriptionId}>Accounts successfully connected</Text>
           </Alert>
         </Box>
